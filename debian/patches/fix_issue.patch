@@ -1,0 +1,859 @@
+Description: With GCC 6, it's problematic to define the min and max
+ macros. Rename them to fymin and fymax.
+Author: Ruben Undheim <ruben.undheim@gmail.com>
+Last-Update: 2016-08-19
+
+--- a/src/FYBA/FYLU.cpp
++++ b/src/FYBA/FYLU.cpp
+@@ -8,12 +8,16 @@
+ 
+ #include <ctype.h>
+ #include <math.h>
+-#include <locale>
++
++#define fymin(a,b) (((a)<(b))?(a):(b))
++#define fymax(a,b) (((a)>(b))?(a):(b))
++
+ 
+ using namespace std;
+ 
+ #define U_PARA_LEN    128     /* Max lengde av parameterstreng */
+ 
++#include <locale>
+ 
+ /* Felles variabler for hele FYBA */
+ extern LC_SYSTEMADM Sys;
+@@ -1232,7 +1236,7 @@ static short LU_PiTestLinje(LC_UTVALG_EL
+ 
+    } else if (metode == LC_U_IKKEFLERE) {          /* Metode "!FL" */
+       /* Teller opp antall av dette SOSI-navnet */
+-      lMaxAntall = max(atol(pUE->min),1l);
++      lMaxAntall = fymax(atol(pUE->min),1l);
+       tilslag = 0;
+       
+       while (LC_GetPiVerdi(pUE->sosi,lPnr,&sSett) != NULL) {
+@@ -1831,7 +1835,7 @@ static short LU_GiTestLinje(LC_UT_ADM *
+    /* Metode "!FL" */
+    } else if (metode == LC_U_IKKEFLERE) {
+       /* Teller opp antall av dette SOSI-navnet */
+-      lMaxAntall = max(atol(pUE->min),1l);
++      lMaxAntall = fymax(atol(pUE->min),1l);
+       tilslag = 0;
+       while ((*apara = LC_GetGP(pUE->sosi,gilin,9999)) != NULL) {
+          tilslag++;
+@@ -2097,10 +2101,10 @@ static void LU_JustPara(char *para,short
+    if (cp != NULL){
+       if (start != 0){
+          if (slutt != 0){
+-            slutt = min(slutt,((short)strlen(cp)));
++            slutt = fymin(slutt,((short)strlen(cp)));
+             *(cp+slutt) = '\0';
+          }
+-         start = min(start,((short)strlen(cp)));
++         start = fymin(start,((short)strlen(cp)));
+          cp += (start-1);
+       }
+       UT_StrCopy(akt_para,cp,max_len);
+--- a/include/fyut.h
++++ b/include/fyut.h
+@@ -125,8 +125,8 @@
+ 
+ 
+ /* ----------------------------------------- Makroer */
+-#define max(a,b) (((a) > (b)) ? (a) : (b))
+-#define min(a,b) (((a) < (b)) ? (a) : (b))
++#define fymax(a,b) (((a) > (b)) ? (a) : (b))
++#define fymin(a,b) (((a) < (b)) ? (a) : (b))
+ 
+ 
+ 
+--- a/src/GM/GM.cpp
++++ b/src/GM/GM.cpp
+@@ -20,8 +20,8 @@
+ #define GM_ACCY  1.0E-8
+ 
+ /* --- Makroer -- */
+-#define max(a,b) (((a) > (b)) ? (a) : (b))
+-#define min(a,b) (((a) < (b)) ? (a) : (b))
++#define fymax(a,b) (((a) > (b)) ? (a) : (b))
++#define fymin(a,b) (((a) < (b)) ? (a) : (b))
+ 
+ 
+ /*
+@@ -214,10 +214,10 @@ SK_EntPnt_GM short GM_wtstPunkt(double P
+    short sAntSkjaer;
+    
+    // Sjekk 1: Ligger punktet utenfor omskrevet rektangel - så ligger det utenfor vinduet
+-   dPolyMaxA=max(wa1,wa2); dPolyMaxA=max(dPolyMaxA,wa3); dPolyMaxA=max(dPolyMaxA,wa4);
+-   dPolyMaxN=max(wn1,wn2); dPolyMaxN=max(dPolyMaxN,wn3); dPolyMaxN=max(dPolyMaxN,wn4);
+-   dPolyMinA=min(wa1,wa2); dPolyMinA=min(dPolyMinA,wa3); dPolyMinA=min(dPolyMinA,wa4);
+-   dPolyMinN=min(wn1,wn2); dPolyMinN=min(dPolyMinN,wn3); dPolyMinN=min(dPolyMinN,wn4);
++   dPolyMaxA=fymax(wa1,wa2); dPolyMaxA=fymax(dPolyMaxA,wa3); dPolyMaxA=fymax(dPolyMaxA,wa4);
++   dPolyMaxN=fymax(wn1,wn2); dPolyMaxN=fymax(dPolyMaxN,wn3); dPolyMaxN=fymax(dPolyMaxN,wn4);
++   dPolyMinA=fymin(wa1,wa2); dPolyMinA=fymin(dPolyMinA,wa3); dPolyMinA=fymin(dPolyMinA,wa4);
++   dPolyMinN=fymin(wn1,wn2); dPolyMinN=fymin(dPolyMinN,wn3); dPolyMinN=fymin(dPolyMinN,wn4);
+    if((PktA>dPolyMaxA) || (PktA<dPolyMinA) || (PktN>dPolyMaxN) || (PktN<dPolyMinN))
+       return 0;
+ 
+@@ -276,16 +276,16 @@ SK_EntPnt_GM short GM_sver(double ka,dou
+    unsigned int kryss = 0;
+    double mini,maxi;
+ 
+-   mini = min(ka,la);
+-   maxi = max(ka,la);
++   mini = fymin(ka,la);
++   maxi = fymax(ka,la);
+ 
+    if (na >= mini  &&  ma <= maxi){        /* (ma er lik na) */
+        if (fabs(la-ka) > 0.0001){
+                                                /* Beregn skjæringspunktet */
+            *sa = ma;
+            *sn = kn + ((*sa-ka)*(ln-kn))/(la-ka);
+-           mini = min(mn,nn) - ACCY;
+-           maxi = max(mn,nn) + ACCY;
++           mini = fymin(mn,nn) - ACCY;
++           maxi = fymax(mn,nn) + ACCY;
+                                                /* Sjekk om det er skjæring */
+            kryss = (unsigned int)(*sn >= mini  &&  *sn <= maxi);
+        }
+@@ -335,16 +335,16 @@ SK_EntPnt_GM short GM_shor(double ka,dou
+    unsigned int kryss = 0;
+    double mini,maxi;
+ 
+-   mini = min(kn,ln);
+-   maxi = max(kn,ln);
++   mini = fymin(kn,ln);
++   maxi = fymax(kn,ln);
+ 
+    if (mn >= mini  &&  nn <= maxi){        /* (mn er lik nn) */
+        if (fabs(ln-kn) > 0.0001){
+                                                /* Beregn skjæringspunktet */
+            *sn = mn;
+            *sa = ka + ((*sn-kn)*(la-ka))/(ln-kn);
+-           mini = min(ma,na) - ACCY;
+-           maxi = max(ma,na) + ACCY;
++           mini = fymin(ma,na) - ACCY;
++           maxi = fymax(ma,na) + ACCY;
+                                                /* Sjekk om det er skjæring */
+            kryss = (unsigned int)(*sa >= mini  &&  *sa <= maxi);
+        }
+@@ -401,10 +401,10 @@ SK_EntPnt_GM short GM_sLinLin(double ka,
+ 
+ 
+    /* Sorterer først ut åpenbare tilfeller der det ikke er skjæring */ 
+-   if (max(ka,la) < min(ma,na))  return 0;
+-   if (min(ka,la) > max(ma,na))  return 0;
+-   if (max(kn,ln) < min(mn,nn))  return 0;
+-   if (min(kn,ln) > max(mn,nn))  return 0;
++   if (fymax(ka,la) < fymin(ma,na))  return 0;
++   if (fymin(ka,la) > fymax(ma,na))  return 0;
++   if (fymax(kn,ln) < fymin(mn,nn))  return 0;
++   if (fymin(kn,ln) > fymax(mn,nn))  return 0;
+ 
+    det = anm * nlk - nnm * alk;
+ 
+@@ -429,10 +429,10 @@ SK_EntPnt_GM short GM_sLinLin(double ka,
+     *  Sjekker etterpå om skjæringspunktet ligger på linjebitene.
+     */
+    if (GM_sVektVekt(ka,kn,la,ln,ma,mn,na,nn,sa,sn)){
+-      if (*sn <= max(kn,ln)+ACCY  &&  *sn >= min(kn,ln)-ACCY  &&
+-          *sa <= max(ka,la)+ACCY  &&  *sa >= min(ka,la)-ACCY  &&
+-          *sn <= max(mn,nn)+ACCY  &&  *sn >= min(mn,nn)-ACCY  &&
+-          *sa <= max(ma,na)+ACCY  &&  *sa >= min(ma,na)-ACCY) {
++      if (*sn <= fymax(kn,ln)+ACCY  &&  *sn >= fymin(kn,ln)-ACCY  &&
++          *sa <= fymax(ka,la)+ACCY  &&  *sa >= fymin(ka,la)-ACCY  &&
++          *sn <= fymax(mn,nn)+ACCY  &&  *sn >= fymin(mn,nn)-ACCY  &&
++          *sa <= fymax(ma,na)+ACCY  &&  *sa >= fymin(ma,na)-ACCY) {
+ 
+          return 1;     /* Skjæring funnet ==> returnerer */
+       }
+@@ -486,17 +486,17 @@ CD kryss = GM_Overlapp(ka,kn,la,ln,ma,mn
+ SK_EntPnt_GM short GM_Overlapp(double ka,double kn,double la,double ln,double ma,double mn,double na,double nn)
+ {
+    // Sorterer først ut åpenbare tilfeller der det ikke er skjæring
+-   if (max(ka,la) < min(ma,na))  return 0;
+-   if (min(ka,la) > max(ma,na))  return 0;
+-   if (max(kn,ln) < min(mn,nn))  return 0;
+-   if (min(kn,ln) > max(mn,nn))  return 0;
++   if (fymax(ka,la) < fymin(ma,na))  return 0;
++   if (fymin(ka,la) > fymax(ma,na))  return 0;
++   if (fymax(kn,ln) < fymin(mn,nn))  return 0;
++   if (fymin(kn,ln) > fymax(mn,nn))  return 0;
+ 
+ 
+    // Linjene er like
+-   if (fabs((min(ka,la) - min(ma,na))) < GM_ACCY &&
+-       fabs((max(ka,la) - max(ma,na))) < GM_ACCY &&
+-       fabs((min(kn,ln) - min(mn,nn))) < GM_ACCY &&
+-       fabs((max(kn,ln) - max(mn,nn))) < GM_ACCY)
++   if (fabs((fymin(ka,la) - fymin(ma,na))) < GM_ACCY &&
++       fabs((fymax(ka,la) - fymax(ma,na))) < GM_ACCY &&
++       fabs((fymin(kn,ln) - fymin(mn,nn))) < GM_ACCY &&
++       fabs((fymax(kn,ln) - fymax(mn,nn))) < GM_ACCY)
+    {
+       return 3;
+    }
+@@ -594,10 +594,10 @@ SK_EntPnt_GM short GM_sVektVekt(double k
+ 
+ 
+    /* Sorterer først ut åpenbare tilfeller der det ikke er skjæring */ 
+-   //if (max(ka,la) < min(ma,na))  return 0;
+-   //if (min(ka,la) > max(ma,na))  return 0;
+-   //if (max(kn,ln) < min(mn,nn))  return 0;
+-   //if (min(kn,ln) > max(mn,nn))  return 0;
++   //if (fymax(ka,la) < fymin(ma,na))  return 0;
++   //if (fymin(ka,la) > fymax(ma,na))  return 0;
++   //if (fymax(kn,ln) < fymin(mn,nn))  return 0;
++   //if (fymin(kn,ln) > fymax(mn,nn))  return 0;
+ 
+    det = anm * nlk - nnm * alk;
+ 
+@@ -679,10 +679,10 @@ SK_EntPnt_GM short GM_sLinBue(double sa,
+ 
+                         /* Sjekk om punktene ligger på linjen */
+    if (kryss > 0){
+-       minn = min(kn,ln) - ACCY;
+-       mina = min(ka,la) - ACCY;
+-       maxn = max(kn,ln) + ACCY;
+-       maxa = max(ka,la) + ACCY;
++       minn = fymin(kn,ln) - ACCY;
++       mina = fymin(ka,la) - ACCY;
++       maxn = fymax(kn,ln) + ACCY;
++       maxa = fymax(ka,la) + ACCY;
+ 
+        if (kryss == 2){
+            if (! (*a2 <= maxa  &&  *a2 >= mina  &&
+@@ -1025,8 +1025,8 @@ SK_EntPnt_GM short GM_fotp(double a1,dou
+       }
+ 
+       /* Sjekk at fotpunktet er på linjen */
+-      //if ( (*nf <= max(n1,n2)+ACCY)  &&  (*nf >= min(n1,n2)-ACCY) ) {
+-      if ( (*nf <= max(n1,n2))  &&  (*nf >= min(n1,n2)) ) {
++      //if ( (*nf <= fymax(n1,n2)+ACCY)  &&  (*nf >= fymin(n1,n2)-ACCY) ) {
++      if ( (*nf <= fymax(n1,n2))  &&  (*nf >= fymin(n1,n2)) ) {
+          beregnet = 2;
+       } else {
+          beregnet = 1;
+@@ -1038,8 +1038,8 @@ SK_EntPnt_GM short GM_fotp(double a1,dou
+       *nf = n1;
+ 
+       /* Sjekk at fotpunktet er på linjen */
+-      //if ( (*af <= max(a1,a2)+ACCY)  &&  (*af >= min(a1,a2)-ACCY) ) {
+-      if ( (*af <= max(a1,a2))  &&  (*af >= min(a1,a2)) ) {
++      //if ( (*af <= fymax(a1,a2)+ACCY)  &&  (*af >= fymin(a1,a2)-ACCY) ) {
++      if ( (*af <= fymax(a1,a2))  &&  (*af >= fymin(a1,a2)) ) {
+          beregnet = 2;
+       } else {
+          beregnet = 1;
+@@ -1073,10 +1073,10 @@ SK_EntPnt_GM short GM_fotp(double a1,dou
+      */
+ 
+       /* Sjekk at fotpunktet er på linjen */
+-      //if (*nf <= (max(n1,n2)+ACCY)  &&  *nf >= (min(n1,n2)-ACCY)  &&
+-      //   *af <= (max(a1,a2)+ACCY)  &&  *af >= (min(a1,a2)-ACCY)){
+-      if (*nf <= (max(n1,n2))  &&  *nf >= (min(n1,n2))  &&
+-         *af <= (max(a1,a2))  &&  *af >= (min(a1,a2))){
++      //if (*nf <= (fymax(n1,n2)+ACCY)  &&  *nf >= (fymin(n1,n2)-ACCY)  &&
++      //   *af <= (fymax(a1,a2)+ACCY)  &&  *af >= (fymin(a1,a2)-ACCY)){
++      if (*nf <= (fymax(n1,n2))  &&  *nf >= (fymin(n1,n2))  &&
++         *af <= (fymax(a1,a2))  &&  *af >= (fymin(a1,a2))){
+          beregnet = 2;                     /* På linjen */
+       } else {
+          beregnet = 1;            /* Utenfor linjen */
+@@ -1186,7 +1186,7 @@ SK_EntPnt_GM short GM_fotp_ny(double a1,
+       }
+ 
+       /* Sjekk at fotpunktet er på linjen */
+-      if ( (*nf <= max(n1,n2)+ACCY)  &&  (*nf >= min(n1,n2)-ACCY) ) {
++      if ( (*nf <= fymax(n1,n2)+ACCY)  &&  (*nf >= fymin(n1,n2)-ACCY) ) {
+          beregnet = 2;
+       } else {
+          beregnet = 1;
+@@ -1198,7 +1198,7 @@ SK_EntPnt_GM short GM_fotp_ny(double a1,
+       *nf = n1;
+ 
+       /* Sjekk at fotpunktet er på linjen */
+-      if ( (*af <= max(a1,a2)+ACCY)  &&  (*af >= min(a1,a2)-ACCY) ) {
++      if ( (*af <= fymax(a1,a2)+ACCY)  &&  (*af >= fymin(a1,a2)-ACCY) ) {
+          beregnet = 2;
+       } else {
+          beregnet = 1;
+@@ -1212,12 +1212,12 @@ SK_EntPnt_GM short GM_fotp_ny(double a1,
+       // Forslag til ny metode for fotpunktberegning. Endrer ikke de opprinnelige punktene,
+       // og det blir da mulig å gi korrekt tilbakemelding om punktet ligger inne på den gitte linjen.
+       retning = GM_RetnGon(a1,n1,a2,n2);
+-      GM_PolRettv(&ap1, &np1, retning+100.0, max(da,dn));
++      GM_PolRettv(&ap1, &np1, retning+100.0, fymax(da,dn));
+       GM_sVektVekt(a1,n1,a2,n2,ap,np,ap1,np1,af,nf);
+       
+       /* Sjekk at fotpunktet er på linjen */
+-      if (*nf <= (max(n1,n2)+ACCY)  &&  *nf >= (min(n1,n2)-ACCY)  &&
+-         *af <= (max(a1,a2)+ACCY)  &&  *af >= (min(a1,a2)-ACCY)){
++      if (*nf <= (fymax(n1,n2)+ACCY)  &&  *nf >= (fymin(n1,n2)-ACCY)  &&
++         *af <= (fymax(a1,a2)+ACCY)  &&  *af >= (fymin(a1,a2)-ACCY)){
+          beregnet = 2;                     /* På linjen */
+       } else {
+          beregnet = 1;            /* Utenfor linjen */
+@@ -1658,8 +1658,8 @@ SK_EntPnt_GM short GM_bepa(double a1, do
+ 
+    if(atmp > ACCY  ||  ntmp > ACCY) {
+    
+-      dmx = max(atmp,ntmp);
+-      dmn = min(atmp,ntmp);
++      dmx = fymax(atmp,ntmp);
++      dmn = fymin(atmp,ntmp);
+       div = dmn / dmx;
+ 
+       rinv = 1.0 / (dmx * sqrt(1.0+div*div));
+@@ -2035,10 +2035,10 @@ SK_EntPnt_GM void GM_buebox(double as,do
+    a2 = as + r*cos(fi+dfi);
+    n2 = ns + r*sin(fi+dfi);
+ 
+-   *nva = min(a1,a2);
+-   *nvn = min(n1,n2);
+-   *oha = max(a1,a2);
+-   *ohn = max(n1,n2);
++   *nva = fymin(a1,a2);
++   *nvn = fymin(n1,n2);
++   *oha = fymax(a1,a2);
++   *ohn = fymax(n1,n2);
+ 
+    // For hver akse (fra sentrumspunktet) som krysses utvides omskrevet boks
+    radius = fabs(radius);
+@@ -2103,27 +2103,27 @@ SK_EntPnt_GM void GM_buebox(double as,do
+    if (fi >= 0.0 && fi < PI/2.0){
+                                               // Slutt i 1. kvadrant
+       if (r2 >= 0.0 && r2 < PI/2.0){
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 2. kvadrant
+       } else if (r2 >= PI/2.0L && r2 < PI){
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
+          *ohn = ns + r;
+                            // Slutt i 3. kvadrant
+       } else if (r2 >=PI && r2 < PI*3.0L/2.0L){
+          *nva = as - r;
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
+          *ohn = ns + r;
+                            // Slutt i 4. kvadrant
+       } else{
+          *nva = as - r;
+          *nvn = ns - r;
+-         *oha = max(a1,a2);
++         *oha = fymax(a1,a2);
+          *ohn = ns + r;
+       }
+ 
+@@ -2134,82 +2134,82 @@ SK_EntPnt_GM void GM_buebox(double as,do
+          *nva = as - r;
+          *nvn = ns - r;
+          *oha = as + r;
+-         *ohn = max(n1,n2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 2. kvadrant
+       } else if (r2 >= PI/2.0L && r2 < PI){
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 3. kvadrant 
+       } else if (r2 >=PI && r2 < PI*3.0L/2.0L){
+          *nva = as - r;
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 4. kvadrant 
+       } else{
+          *nva = as - r;
+          *nvn = ns - r;
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+       }
+ 
+                            // Start i 3. kvadrant 
+    } else if (fi >=PI && fi < PI*3.0L/2.0L){
+                            // Slutt i 1. kvadrant 
+       if (r2 >= 0.0 && r2 < PI/2.0){
+-         *nva = min(a1,a2);
++         *nva = fymin(a1,a2);
+          *nvn = ns - r;
+          *oha = as + r;
+-         *ohn = max(n1,n2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 2. kvadrant 
+       } else if (r2 >= PI/2.0L && r2 < PI){
+-         *nva = min(a1,a2);
++         *nva = fymin(a1,a2);
+          *nvn = ns - r;
+          *oha = as + r;
+          *ohn = ns + r;
+                            // Slutt i 3. kvadrant 
+       } else if (r2 >=PI && r2 < PI*3.0L/2.0L){
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+       } else{
+                            // Slutt i 4. kvadrant 
+-         *nva = min(a1,a2);
++         *nva = fymin(a1,a2);
+          *nvn = ns - r;
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+       }
+ 
+                            // Start i 4. kvadrant 
+    } else {
+                            // Slutt i 1. kvadrant 
+       if (r2 >= 0.0 && r2 < PI/2.0) {
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
+          *oha = as + r;
+-         *ohn = max(n1,n2);
++         *ohn = fymax(n1,n2);
+                            // Slutt i 2. kvadrant 
+       } else if (r2 >= PI/2.0L && r2 < PI) {
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
+          *oha = as + r;
+          *ohn = ns + r;
+ 
+                            // Slutt i 3. kvadrant 
+       } else if (r2 >=PI && r2 < PI*3.0L/2.0L) {
+          *nva = as - r;
+-         *nvn = min(n1,n2);
++         *nvn = fymin(n1,n2);
+          *oha = as + r;
+          *ohn = ns + r;
+                            // Slutt i 4. kvadrant 
+       } else {
+-         *nva = min(a1,a2);
+-         *nvn = min(n1,n2);
+-         *oha = max(a1,a2);
+-         *ohn = max(n1,n2);
++         *nva = fymin(a1,a2);
++         *nvn = fymin(n1,n2);
++         *oha = fymax(a1,a2);
++         *ohn = fymax(n1,n2);
+       }
+    }
+ }
+--- a/src/UT/fyut.h
++++ b/src/UT/fyut.h
+@@ -125,8 +125,8 @@
+ 
+ 
+ /* ----------------------------------------- Makroer */
+-#define max(a,b) (((a) > (b)) ? (a) : (b))
+-#define min(a,b) (((a) < (b)) ? (a) : (b))
++#define fymax(a,b) (((a) > (b)) ? (a) : (b))
++#define fymin(a,b) (((a) < (b)) ? (a) : (b))
+ 
+ 
+ 
+--- a/src/FYBA/FYLI.cpp
++++ b/src/FYBA/FYLI.cpp
+@@ -1141,8 +1141,8 @@ CD LC_EraseBt(fra_kol,til_kol);
+ SK_EntPnt_FYBA void LC_EraseBt(short fra_kol,short til_kol)
+ {
+                        /* Beregner lovlige kolonner */
+-   fra_kol = max(fra_kol,BT_MIN_USER);
+-   til_kol = min(til_kol,BT_MAX_USER);
++   fra_kol = fymax(fra_kol,BT_MIN_USER);
++   til_kol = fymin(til_kol,BT_MAX_USER);
+ 
+    LI_EraseBt(fra_kol,til_kol);
+ }
+@@ -1248,8 +1248,8 @@ void LI_EraseBt(short fra_kol,short til_
+    LC_FILADM *pFil;
+ 
+                                                /* Beregner lovlige områder */
+-   fra_kol = max(fra_kol,BT_MIN_BT);
+-   til_kol = min(til_kol,BT_MAX_BT);
++   fra_kol = fymax(fra_kol,BT_MIN_BT);
++   til_kol = fymin(til_kol,BT_MAX_BT);
+ 
+    maske = 0x0000;                             /* Lager slettemaske */
+    for ( ; fra_kol <= til_kol; fra_kol++){
+@@ -1302,8 +1302,8 @@ SK_EntPnt_FYBA void LC_CopyBt(short fra_
+    unsigned long ul;
+ 
+                                            /* Beregner lovlige områder */
+-   fra_kol = min(max(fra_kol,0),BT_MAX_BT);
+-   til_kol = min(max(til_kol,0),BT_MAX_USER);
++   fra_kol = fymin(fymax(fra_kol,0),BT_MAX_BT);
++   til_kol = fymin(fymax(til_kol,0),BT_MAX_USER);
+ 
+                                            /* Returner verdi */
+    maske_fra = 0x00000001UL << fra_kol;
+--- a/src/FYBA/FYLO.cpp
++++ b/src/FYBA/FYLO.cpp
+@@ -1598,10 +1598,10 @@ SK_EntPnt_FYBA void LC_CloseSos(LC_FILAD
+         if (pFil->usLag & (LC_FRAMGR | LC_BAKGR)) {
+            /* Filen inneholder data */
+            if (pFil->pGeoRN != NULL) {
+-              pB->dMinAust = min(pB->dMinAust,pFil->Omraade.dMinAust);
+-              pB->dMinNord = min(pB->dMinNord,pFil->Omraade.dMinNord);
+-              pB->dMaxAust = max(pB->dMaxAust,pFil->Omraade.dMaxAust);
+-              pB->dMaxNord = max(pB->dMaxNord,pFil->Omraade.dMaxNord);
++              pB->dMinAust = fymin(pB->dMinAust,pFil->Omraade.dMinAust);
++              pB->dMinNord = fymin(pB->dMinNord,pFil->Omraade.dMinNord);
++              pB->dMaxAust = fymax(pB->dMaxAust,pFil->Omraade.dMaxAust);
++              pB->dMaxNord = fymax(pB->dMaxNord,pFil->Omraade.dMaxNord);
+            }
+         }
+         pFil = pFil->pNesteFil;
+@@ -1789,10 +1789,10 @@ SK_EntPnt_FYBA short LC_GetBaOm(unsigned
+ 	while (LC_NextFil(&pFil,usLag)) {
+       sAntall++;
+       if (LC_GetFiOm(pFil,&na,&nn,&oa,&on)) {
+-         *nva = min (*nva, na);
+-         *nvn = min (*nvn, nn);
+-         *oha = max (*oha, oa);
+-         *ohn = max (*ohn, on);
++         *nva = fymin(*nva, na);
++         *nvn = fymin(*nvn, nn);
++         *oha = fymax(*oha, oa);
++         *ohn = fymax(*ohn, on);
+       }
+    }
+    
+@@ -2034,10 +2034,10 @@ static short LO_InklSos(LC_FILADM *pFil,
+             if (pFil->usLag & (LC_FRAMGR | LC_BAKGR)) {
+                /* Filen inneholder data */
+                if (pFil->pGeoRN != NULL) {
+-                  pB->dMinAust = min(pB->dMinAust,pFil->Omraade.dMinAust);
+-                  pB->dMinNord = min(pB->dMinNord,pFil->Omraade.dMinNord);
+-                  pB->dMaxAust = max(pB->dMaxAust,pFil->Omraade.dMaxAust);
+-                  pB->dMaxNord = max(pB->dMaxNord,pFil->Omraade.dMaxNord);
++                  pB->dMinAust = fymin(pB->dMinAust,pFil->Omraade.dMinAust);
++                  pB->dMinNord = fymin(pB->dMinNord,pFil->Omraade.dMinNord);
++                  pB->dMaxAust = fymax(pB->dMaxAust,pFil->Omraade.dMaxAust);
++                  pB->dMaxNord = fymax(pB->dMaxNord,pFil->Omraade.dMaxNord);
+                }
+             }
+             pFil = pFil->pNesteFil;
+--- a/src/FYBA/FYLX.cpp
++++ b/src/FYBA/FYLX.cpp
+@@ -2086,7 +2086,7 @@ SK_EntPnt_FYBA char *LC_GetGP(const char
+             if (sSlutt != 0  &&  sSlutt < (short)strlen(rp)) {
+                *(rp+sSlutt) = '\0';
+             }
+-            sStart = min(sStart,((short)strlen(rp)));
++            sStart = fymin(sStart,((short)strlen(rp)));
+             rp += (sStart-1);
+          }
+ 
+@@ -2279,7 +2279,7 @@ SK_EntPnt_FYBA char *LC_GetPiVerdi(const
+                      /* Hent enhet og formater høyden */
+                      niv = 2;
+                      LC_GetCurEnhet(Sys.GrId.pFil,&niv,&enhet,&enhet_h,&enhet_d);
+-                     sAntDes = UT_RoundDS(fabs(min(0.0,log10(enhet_h))));
++                     sAntDes = UT_RoundDS(fabs(fymin(0.0,log10(enhet_h))));
+                      UT_SNPRINTF(format,20,"%%.%dlf",sAntDes);
+                      UT_SNPRINTF(retur_str,LC_MAX_SOSI_LINJE_LEN,format,h);
+                      funnet = UT_TRUE;
+@@ -2329,7 +2329,7 @@ SK_EntPnt_FYBA char *LC_GetPiVerdi(const
+                   if (sSlutt != 0  &&  sSlutt < (short)strlen(rp)) {
+                      *(rp+sSlutt) = '\0';
+                   }
+-                  sStart = min(sStart,((short)strlen(rp)));
++                  sStart = fymin(sStart,((short)strlen(rp)));
+                   rp += (sStart-1);
+                }
+ 
+@@ -2600,7 +2600,7 @@ SK_EntPnt_FYBA short LC_PutGP(const char
+             if (sSlutt != 0  &&  sSlutt < (short)strlen(rp)) {
+                *(rp+sSlutt) = '\0';
+             }
+-            sStart = min(sStart,((short)strlen(rp)));
++            sStart = fymin(sStart,((short)strlen(rp)));
+             rp += (sStart-1);
+          }
+ 
+@@ -2783,28 +2783,28 @@ SK_EntPnt_FYBA void LC_InitPP(char *sosi
+ 
+        UT_StrToken(sosi_navn,0,&itxu,LC_MAX_SOSINAVN_LEN,pp_stat->pinfo_navn);  /* SOSI-navnet */
+        UT_StrUpper(pp_stat->pinfo_navn);
+-       pp_stat->slutt_punkt = min(siste_punkt,Sys.pGrInfo->nko) + 1;
++       pp_stat->slutt_punkt = fymin(siste_punkt,Sys.pGrInfo->nko) + 1;
+ 
+        /* -------- Knutepunkt */
+        if (strcmp(pp_stat->pinfo_navn,"...KP") == 0){
+            pp_stat->type = LC_GETPP_KP;
+-           pp_stat->curr_punkt = max(forste_punkt,1) -1;  /* Sjekk punktnummer */
++           pp_stat->curr_punkt = fymax(forste_punkt,1) -1;  /* Sjekk punktnummer */
+ 
+        /* -------- Høyde */
+        } else if (strcmp(pp_stat->pinfo_navn,"HØYDE") == 0) {
+            pp_stat->type = LC_GETPP_HOYDE;
+-           pp_stat->curr_punkt = max(forste_punkt,1) -1;  /* Sjekk punktnummer */
++           pp_stat->curr_punkt = fymax(forste_punkt,1) -1;  /* Sjekk punktnummer */
+ 
+        /* -------- Kvalitet */
+        } else if (strcmp(pp_stat->pinfo_navn,"KVALITET") == 0) {
+            pp_stat->type = LC_GETPP_KVALITET;
+-           pp_stat->curr_punkt = max(forste_punkt,1) -1;  /* Sjekk punktnummer */
++           pp_stat->curr_punkt = fymax(forste_punkt,1) -1;  /* Sjekk punktnummer */
+ 
+        /* -------- Annen PINFO */
+        } else {
+            pp_stat->type = LC_GETPP_VANLIG;
+            pp_stat->neste_tegn = 0;
+-           pp_stat->curr_punkt = max(forste_punkt,1);  /* Sjekk punktnummer */
++           pp_stat->curr_punkt = fymax(forste_punkt,1);  /* Sjekk punktnummer */
+        }
+    }
+ }
+@@ -2874,7 +2874,7 @@ SK_EntPnt_FYBA char *LC_GetPP(long *punk
+             niv = 2;
+             LC_GetCurEnhet(Sys.GrId.pFil,&niv,&enhet,&enhet_h,&enhet_d);
+             
+-            sAntDes = UT_RoundDS(fabs(min(0.0,log10(enhet_h))));
++            sAntDes = UT_RoundDS(fabs(fymin(0.0,log10(enhet_h))));
+             UT_SNPRINTF(format,20,"%%.%dlf",sAntDes);
+             UT_SNPRINTF(retur_str,LC_MAX_SOSI_LINJE_LEN,format,h);
+ 
+@@ -3001,8 +3001,8 @@ short LC_FinnKp(long *forste_punkt,long
+ 
+    if (Sys.GrId.lNr != INGEN_GRUPPE){                 /* Aktuell gruppe OK */
+       if(Sys.pGrInfo->info & GI_KP){                 /* Gruppen har knutepunkt */
+-         punkt = max(*forste_punkt,1);               /* Sjekk punktnummer */
+-         siste_punkt = min(siste_punkt,Sys.pGrInfo->nko);
++         punkt = fymax(*forste_punkt,1);               /* Sjekk punktnummer */
++         siste_punkt = fymin(siste_punkt,Sys.pGrInfo->nko);
+ 
+          /* Skann gruppen */
+          for (punkt--; punkt<siste_punkt; ++punkt) {
+--- a/src/FYBA/FYLS.cpp
++++ b/src/FYBA/FYLS.cpp
+@@ -207,7 +207,7 @@ SK_EntPnt_FYBA long LC_FASn(LC_SNR_ADM *
+    LC_BGR AktBgr,Bgr;
+    long lSnr,lGrNr;
+    long lAntall = 0;
+-   long lMaxSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   long lMaxSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+ 
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FASn"); */
+@@ -269,7 +269,7 @@ SK_EntPnt_FYBA short LC_FFSn(LC_SNR_ADM
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FFSn"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FFSn");
+ 
+-   lMaxSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lMaxSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra starten av søkeområdet */
+    for (lSnr=pSnrAdm->lMinSnr; lSnr<=lMaxSnr; lSnr++) {
+@@ -314,7 +314,7 @@ SK_EntPnt_FYBA short LC_FFSnBt(LC_SNR_AD
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FFSnBt"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FFSnBt");
+ 
+-   lMaxSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lMaxSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra starten av søkeområdet */
+    for (lSnr=pSnrAdm->lMinSnr; lSnr<=lMaxSnr; lSnr++) {
+@@ -361,7 +361,7 @@ SK_EntPnt_FYBA short LC_FNSn(LC_SNR_ADM
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FNSn"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FNSn");
+ 
+-   lMaxSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lMaxSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra aktuellt serienummer */
+    for (lSnr=pSnrAdm->lAktSnr+1L; lSnr<=lMaxSnr; lSnr++) {
+@@ -406,7 +406,7 @@ SK_EntPnt_FYBA short LC_FNSnBt(LC_SNR_AD
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FNSnBt"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FNSnBt");
+ 
+-   lMaxSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lMaxSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra aktuellt serienummer */
+    for (lSnr=pSnrAdm->lAktSnr+1L; lSnr<=lMaxSnr; lSnr++) {
+@@ -540,7 +540,7 @@ SK_EntPnt_FYBA short LC_FLSn(LC_SNR_ADM
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FLSn"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FLSn");
+ 
+-   lSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra slutten av tabellen */
+    for (; lSnr>=pSnrAdm->lMinSnr; lSnr--) {
+@@ -586,7 +586,7 @@ SK_EntPnt_FYBA short LC_FLSnBt(LC_SNR_AD
+    /* LO_TestFilpeker(pSnrAdm->pFil,"LC_FLSnBt"); */
+    LO_TestFilpeker(pSnrAdm->pFil,"FLSnBt");
+ 
+-   lSnr = min(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
++   lSnr = fymin(pSnrAdm->pFil->lMaxSnr, pSnrAdm->lMaxSnr);
+ 
+    /* Sjekker fra slutten av tabellen */
+    for (; lSnr>=pSnrAdm->lMinSnr; lSnr--) {
+--- a/src/FYBA/FYLR.cpp
++++ b/src/FYBA/FYLR.cpp
+@@ -141,10 +141,10 @@ void LR_Indx(void)
+ 
+             // Spesialhandtering av ulogiske sirkler og buer. Håndteres som KURVE
+             for (pt=0; pt<Sys.pGrInfo->nko; pt++) {
+-               min_a = min(min_a,*(Sys.pdAust + pt));
+-               min_n = min(min_n,*(Sys.pdNord + pt));
+-               max_a = max(max_a,*(Sys.pdAust + pt));
+-               max_n = max(max_n,*(Sys.pdNord + pt));
++               min_a = fymin(min_a,*(Sys.pdAust + pt));
++               min_n = fymin(min_n,*(Sys.pdNord + pt));
++               max_a = fymax(max_a,*(Sys.pdAust + pt));
++               max_n = fymax(max_n,*(Sys.pdNord + pt));
+             }
+          }
+ 
+@@ -152,10 +152,10 @@ void LR_Indx(void)
+       } else {
+          /* Omskreven firkant */
+          for (pt=0; pt<Sys.pGrInfo->nko; pt++) {
+-            min_a = min(min_a,*(Sys.pdAust + pt));
+-            min_n = min(min_n,*(Sys.pdNord + pt));
+-            max_a = max(max_a,*(Sys.pdAust + pt));
+-            max_n = max(max_n,*(Sys.pdNord + pt));
++            min_a = fymin(min_a,*(Sys.pdAust + pt));
++            min_n = fymin(min_n,*(Sys.pdNord + pt));
++            max_a = fymax(max_a,*(Sys.pdAust + pt));
++            max_n = fymax(max_n,*(Sys.pdNord + pt));
+          }
+       }
+ 
+@@ -412,10 +412,10 @@ void LR_IndxFlate(void)
+          for (s=0; s<ant_ref; s++) {
+             pRL = LI_GetGeo(pFi,ref_arr[s]);
+             if (pRL != NULL) {
+-               min_a = min(min_a, pRL->Boks.dMinAust);
+-               min_n = min(min_n, pRL->Boks.dMinNord);
+-               max_a = max(max_a, pRL->Boks.dMaxAust);
+-               max_n = max(max_n, pRL->Boks.dMaxNord);
++               min_a = fymin(min_a, pRL->Boks.dMinAust);
++               min_n = fymin(min_n, pRL->Boks.dMinNord);
++               max_a = fymax(max_a, pRL->Boks.dMaxAust);
++               max_n = fymax(max_n, pRL->Boks.dMaxNord);
+             }
+          }
+ 
+@@ -1857,10 +1857,10 @@ CD =====================================
+ */
+ static void LR_R_BoksSum(LC_BOKS * pB1,LC_BOKS * pB2)
+ {
+-   pB1->dMinAust = min(pB1->dMinAust,pB2->dMinAust);
+-	pB1->dMinNord = min(pB1->dMinNord,pB2->dMinNord);
+-   pB1->dMaxAust = max(pB1->dMaxAust,pB2->dMaxAust);      
+-   pB1->dMaxNord = max(pB1->dMaxNord,pB2->dMaxNord);  
++   pB1->dMinAust = fymin(pB1->dMinAust,pB2->dMinAust);
++	pB1->dMinNord = fymin(pB1->dMinNord,pB2->dMinNord);
++   pB1->dMaxAust = fymax(pB1->dMaxAust,pB2->dMaxAust);      
++   pB1->dMaxNord = fymax(pB1->dMaxNord,pB2->dMaxNord);  
+ }
+ 
+ 
+@@ -1886,8 +1886,8 @@ static double LR_BoksDeltaArealSum(LC_BO
+     //lGml = (pB1->dMaxAust - pB1->dMinAust) * (pB1->dMaxNord - pB1->dMinNord);
+     //return (lNy - lGml); 
+ 
+-    double dDeltaAreal = (max(pB1->dMaxAust,pB2->dMaxAust) - min(pB1->dMinAust,pB2->dMinAust)) *
+-                         (max(pB1->dMaxNord,pB2->dMaxNord) - min(pB1->dMinNord,pB2->dMinNord));
++    double dDeltaAreal = (fymax(pB1->dMaxAust,pB2->dMaxAust) - fymin(pB1->dMinAust,pB2->dMinAust)) *
++                         (fymax(pB1->dMaxNord,pB2->dMaxNord) - fymin(pB1->dMinNord,pB2->dMinNord));
+ 
+     return dDeltaAreal; 
+ }
+--- a/src/FYBA/FYLB.cpp
++++ b/src/FYBA/FYLB.cpp
+@@ -710,8 +710,8 @@ SK_EntPnt_FYBA void LC_WsGrPart(LC_FILAD
+                                            /* OK ==> Skriv */
+        } else{
+                                          /* Sjekker at punktnummer er lovlig */
+-           fra_punkt = min( max(1,fra_punkt), max(1,Sys.pGrInfo->nko) );
+-           antall = min( max(antall,0), (Sys.pGrInfo->nko-fra_punkt+1) );
++           fra_punkt = fymin( fymax(1,fra_punkt), fymax(1,Sys.pGrInfo->nko) );
++           antall = fymin( fymax(antall,0), (Sys.pGrInfo->nko-fra_punkt+1) );
+ 
+                                                         /* Skriver */
+            LB_WGru(SKRIV_SISTE,fra_punkt,antall,pFil,pFil->n64AktPos,&neste);
+@@ -2738,7 +2738,7 @@ CD LB_FormaterEnhet(streng,sStrengMaxLen
+ char *LB_FormaterEnhet(char *streng,short sStrengMaxLen,char *SosiNavn,double enhet)
+ {
+    char enhet_buffer[20],*cp;
+-   short sAntDes = max(1,UT_RoundDS(fabs(min(1.0,log10(enhet)))));
++   short sAntDes = fymax(1,UT_RoundDS(fabs(fymin(1.0,log10(enhet)))));
+ 
+    UT_StrCopy(streng,SosiNavn,sStrengMaxLen);
+    UT_StrCat(streng," ",sStrengMaxLen);
+@@ -3014,11 +3014,11 @@ SK_EntPnt_FYBA short LC_DelGiL(short lin
+       if (antall > 0) {
+          Sys.sGrEndra = (short)END_ENDRA;
+ 
+-         start = max(linje,2);           /* 2 er første lovlige linje */
++         start = fymax(linje,2);           /* 2 er første lovlige linje */
+          antall -= (start-linje);        /* Juster antall tilsvarende */
+ 
+          /* Max antall er resten av GINFO */
+-         antall = min(start+antall-1,Sys.pGrInfo->ngi) - start + 1;
++         antall = fymin(start+antall-1,Sys.pGrInfo->ngi) - start + 1;
+ 
+          if (start+antall <= Sys.pGrInfo->ngi) {
+             /* Beregn forflytting */
+@@ -3116,11 +3116,11 @@ SK_EntPnt_FYBA long LC_DelKoL(long linje
+       Sys.sGrEndra = (short)END_ENDRA;
+       if (linje <= Sys.lPibufPnr)  Sys.sPibufStatus = LC_PIBUF_TOM;
+             
+-      start = max(linje,1);             /* 1 er første lovlige linje */
++      start = fymax(linje,1);             /* 1 er første lovlige linje */
+       antall -= (start-linje);          /* Juster antall tilsvarende */
+ 
+                                         /* Max antall er resten av punktene */
+-      antall = min(start+antall-1,Sys.pGrInfo->nko) - start + 1;
++      antall = fymin(start+antall-1,Sys.pGrInfo->nko) - start + 1;
+ 
+       /* UT_FPRINTF(stderr," %hd - %hd\n",start,antall); */
+ 
+--- a/src/UT/UT3.cpp
++++ b/src/UT/UT3.cpp
+@@ -68,7 +68,7 @@ SK_EntPnt_UT void UT_Pause (short dur)
+ 
+    UT_InqTime (tid);
+    t1 = 100*tid[2] + tid[3];
+-   t2 = t1 + min (dur,6000);
++   t2 = t1 + fymin(dur,6000);
+    do {
+       UT_InqTime (tid);
+       t = 100*tid[2] + tid[3];

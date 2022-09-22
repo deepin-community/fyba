@@ -1,0 +1,34 @@
+#!/bin/bash
+
+TMPDIR=`mktemp -d`
+
+
+cd ${TMPDIR}
+cat > source_file.cc << EOF
+#include <iostream>
+
+int main() {
+  std::cout << "Hello world. Just tested that it is possible to\nlink with -lfyba, -lfygm and -lfyut without\nanything written to stderr." << std::endl;
+}
+
+EOF
+
+RET=0
+
+g++ -o source_file source_file.cc -lfyba -lfygm -lfyut
+RETSTEP=$?
+if [ "$RETSTEP" != "0" ] ; then
+  RET=1
+fi
+
+./source_file
+RETSTEP=$?
+if [ "$RETSTEP" != "0" ] ; then
+  RET=1
+fi
+
+readelf -d ./source_file
+
+rm -rf ${TMPDIR}
+
+exit $RET

@@ -1,0 +1,34 @@
+Description: This call makes libfyba link with libfyut and libfygm.
+Author: Ruben Undheim <ruben.undheim@gmail.com>
+
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,6 +1,6 @@
+ ACLOCAL_AMFLAGS = -I m4
+ AUTOMAKE_OPTIONS = foreign
+-SUBDIRS = src/GM src/UT src/FYBA doc
++SUBDIRS = src/UT src/GM src/FYBA doc
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = fyba.pc
+--- a/src/FYBA/Makefile.am
++++ b/src/FYBA/Makefile.am
+@@ -4,6 +4,8 @@ ACLOCAL_AMFLAGS = -I m5
+ lib_LTLIBRARIES = libfyba.la
+ libfyba_la_SOURCES = fyba.h Fyba_Callback.cpp  FYBA_DLL.cpp      FYHO.cpp  FYLD.cpp  FYLH.cpp  fyln.cpp  FYLP.cpp  FYLS.cpp  FYLX.cpp  stdafx.cpp FYBA.cpp           Fyba_melding.cpp  FYLB.cpp  FYLE.cpp  FYLI.cpp  FYLO.cpp  FYLR.cpp  FYLU.cpp  FYTA.cpp fyba.h  fyba_strings.h  fybax.h  stdafx.h
+ libfyba_la_LDFLAGS = -version-info 0:0:0
++libfyba_la_LIBADD = $(top_builddir)/src/UT/libfyut.la \
++                    $(top_builddir)/src/GM/libfygm.la
+ 
+ library_includedir=$(includedir)/fyba
+ library_include_HEADERS = fyba.h     
+--- a/src/GM/Makefile.am
++++ b/src/GM/Makefile.am
+@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -I m5
+ lib_LTLIBRARIES = libfygm.la
+ libfygm_la_SOURCES = fygm.h GM.cpp stdafx.cpp stdafx.h
+ libfygm_la_LDFLAGS = -version-info 0:0:0
++libfygm_la_LIBADD = $(top_builddir)/src/UT/libfyut.la
+ 
+ library_includedir=$(includedir)/fyba
+ library_include_HEADERS = fygm.h 

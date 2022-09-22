@@ -1,0 +1,32 @@
+Source: fyba
+Maintainer: Debian GIS Project <pkg-grass-devel@lists.alioth.debian.org>
+Uploaders: Ruben Undheim <ruben.undheim@gmail.com>
+Section: libs
+Priority: optional
+Build-Depends: debhelper (>= 10~)
+Standards-Version: 4.5.0
+Vcs-Browser: https://salsa.debian.org/debian-gis-team/fyba
+Vcs-Git: https://salsa.debian.org/debian-gis-team/fyba.git
+Homepage: https://github.com/kartverket/fyba
+
+Package: libfyba0
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Description: FYBA library to read and write Norwegian geodata standard format SOSI
+ OpenFYBA is the source code release of the FYBA library, distributed by the
+ National Mapping Authority of Norway (Statens kartverk) to read and write
+ files in the National geodata standard format SOSI.
+
+Package: libfyba-dev
+Architecture: any
+Multi-Arch: same
+Section: libdevel
+Depends: libfyba0 (= ${binary:Version}),
+         ${misc:Depends}
+Description: Header files for FYBA library
+ This is the development package for developing applications that depends on
+ libfyba. It includes header files, static library files and HTML
+ documentation.

@@ -1,0 +1,2 @@
+Tests: link-to-library
+Depends: libfyba-dev, g++
